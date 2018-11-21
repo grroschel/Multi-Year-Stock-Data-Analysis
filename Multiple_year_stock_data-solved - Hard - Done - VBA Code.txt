@@ -1,0 +1,250 @@
+Sub totalvolumeandmore()
+
+    ' Declare variables
+    Dim ticker As String
+    Dim saveticker As String
+    Dim volume As Double
+    Dim totalvol As Double
+    Dim row As Double
+    Dim tickerrowout As Double
+    Dim firsttime As String
+    Dim openin As Double
+    Dim closein As Double
+    Dim yearopen As Double
+    Dim yearclose As Double
+    Dim yearchange As Double
+    Dim percentchange As Double
+    ' Declare variables for Greatest... area
+    ' gpi = greatest percent increase
+    Dim gpi As Double
+    Dim gpiticker As String
+    ' gpd = greatest percent decrease
+    Dim gpd As Double
+    Dim gpdticker As String
+    ' gtv = greatest total volume
+    Dim gtv As Double
+    Dim gtvticker As String
+
+    ' Initialize any variables as necessary
+    row = 2
+    totalvol = 0
+    tickerrowout = 2
+    firsttime = "y"
+    gpi = 0
+    gpd = 0
+    gtv = 0
+    
+    ' ---------------------------------------------------------------------------------
+    ' Format Columns & Cells as Appropriate to make more readable & Put Out All Headers
+    ' ---------------------------------------------------------------------------------
+    ' Format the Yearly Change column
+    ActiveSheet.Columns("J").NumberFormat = "#,##0.00"
+    ' Format the Total Stock Volume column
+    ActiveSheet.Columns("L").NumberFormat = "###,###,###,##0"
+    ' Format the Greatest Total Volume cell
+    ActiveSheet.Range("Q4").NumberFormat = "###,###,###,##0"
+    
+    ' Put out all new headers
+    Range("I1").Value = "Ticker"
+    Range("I1").Font.Bold = True
+    Range("I1").HorizontalAlignment = xlCenter
+    Range("J1").Value = "Yearly Change"
+    Range("J1").Font.Bold = True
+    Range("J1").HorizontalAlignment = xlCenter
+    Range("K1").Value = "Percent Change"
+    Range("K1").Font.Bold = True
+    Range("K1").HorizontalAlignment = xlCenter
+    Range("L1").Value = "Total Stock Volume"
+    Range("L1").Font.Bold = True
+    Range("L1").HorizontalAlignment = xlCenter
+    Range("P1").Value = "Ticker"
+    Range("P1").Font.Bold = True
+    Range("P1").HorizontalAlignment = xlCenter
+    Range("Q1").Value = "Value"
+    Range("Q1").Font.Bold = True
+    Range("Q1").HorizontalAlignment = xlCenter
+    Range("O2").Value = "Greatest % Increase"
+    Range("O2").Font.Bold = True
+    Range("O3").Value = "Greatest % Decrease"
+    Range("O3").Font.Bold = True
+    Range("O4").Value = "Greatest Total Volume"
+    Range("O4").Font.Bold = True
+    
+    ' Set column widths for all new data columns
+    ActiveSheet.Columns("H").ColumnWidth = "3"
+    ActiveSheet.Columns("I").ColumnWidth = "10.38"
+    ActiveSheet.Columns("J").ColumnWidth = "12.38"
+    ActiveSheet.Columns("K").ColumnWidth = "13.75"
+    ActiveSheet.Columns("L").ColumnWidth = "17.13"
+    ActiveSheet.Columns("M").ColumnWidth = "3"
+    ActiveSheet.Columns("N").ColumnWidth = "3"
+    ActiveSheet.Columns("O").ColumnWidth = "19.63"
+    ActiveSheet.Columns("P").ColumnWidth = "10.38"
+    ActiveSheet.Columns("Q").ColumnWidth = "17.13"
+    
+    'Put a thicker box around the Greatest... totals area
+    Range("O1:Q4").Select
+    With Selection.Borders(xlEdgeLeft)
+       .LineStyle = xlContinuous
+       .Weight = xlMedium
+    End With
+    With Selection.Borders(xlEdgeTop)
+       .LineStyle = xlContinuous
+       .Weight = xlMedium
+    End With
+    With Selection.Borders(xlEdgeBottom)
+       .LineStyle = xlContinuous
+       .Weight = xlMedium
+    End With
+    With Selection.Borders(xlEdgeRight)
+       .LineStyle = xlContinuous
+       .Weight = xlMedium
+    End With
+    
+    ' Center & bold all existing headers
+    For icol = 1 To 7
+       Cells(1, icol).Font.Bold = True
+       Cells(1, icol).HorizontalAlignment = xlCenter
+    Next icol
+                 
+    ' ---------------------
+    ' Process the data/rows
+    ' ---------------------
+    ' Process loop for data
+    Do While Cells(row, 1).Value <> ""
+    
+        ' Get the Data from the current row
+          ' Col 1 is ticker
+          ' Col 3 is the open price
+          ' Col 6 is the closing price
+          ' Col 7 is volume
+        ticker = Cells(row, 1).Value
+        openin = Cells(row, 3).Value
+        closein = Cells(row, 6).Value
+        volume = Cells(row, 7).Value
+        
+        ' Process Data/Calculation Loop
+        If (firsttime = "y") Then
+
+             ' Set & calculate initial values for first record/row read
+             totalvol = totalvol + volume
+             saveticker = ticker
+             yearopen = openin
+             yearclose = closein
+             firsttime = "n"
+        ElseIf (ticker = saveticker) Then
+            ' It's not the first time & it's the same ticker we have been processing
+            ' Accumulate the total volume
+            totalvol = totalvol + volume
+            ' Capture the close JIC this is the last record/close for this ticker for the year
+            yearclose = closein
+        Else
+            ' It's not the first time &  we have a new ticker
+            'Compute Yearly Change & Percent Change
+            yearchange = yearclose - yearopen
+            If yearopen <> 0 Then
+                percentchange = ((yearchange / yearopen) * 100)
+            Else
+                percentchange = 0
+            End If
+            ' Write out the previously processed ticker & it's 4 related values
+            Cells(tickerrowout, 9).Value = saveticker
+            Cells(tickerrowout, 10).Value = yearchange
+            ' If Yearly Change is positive, color the cell green
+            ' If Yearly Change is negative, color the cell red
+            ' Colors: 4 = green; 3 = red
+            If yearchange > 0 Then
+                Cells(tickerrowout, 10).Interior.ColorIndex = 4
+            ElseIf yearchange < 0 Then
+                Cells(tickerrowout, 10).Interior.ColorIndex = 3
+            End If
+            Cells(tickerrowout, 11).Value = (Str(percentchange) + "%")
+            Cells(tickerrowout, 12).Value = totalvol
+            
+            ' Collect values for Greatest % Increase, Greatest % Decrease & Greatest Total Volume from previous record
+            If percentchange > gpi Then
+                gpi = percentchange
+                gpiticker = saveticker
+            End If
+            If percentchange < gpd Then
+                gpd = percentchange
+                gpdticker = saveticker
+            End If
+            If totalvol > gtv Then
+                gtv = totalvol
+                gtvticker = saveticker
+            End If
+            
+            ' Prepare for the new/current record
+            ' Increment the ticker row counter
+            tickerrowout = tickerrowout + 1
+            
+            ' Initialize/store variables for the new ticker
+            totalvol = volume
+            saveticker = ticker
+            yearopen = openin
+            yearclose = closein
+        End If
+        
+        ' Increment row # to get next record/row/ticker
+        row = row + 1
+        
+        ' Loopback and do the next row
+    Loop
+    
+    ' ----------------------------------
+    ' Process the last ticker we read in
+    ' ----------------------------------
+    ' We're done processing records/rows
+    ' Put out the info for the last ticker
+    'Compute Yearly Change & Percent Change
+    yearchange = yearclose - yearopen
+    If yearopen <> 0 Then
+        percentchange = ((yearchange / yearopen) * 100)
+    Else
+        percentchange = 0
+    End If
+    ' Write out the previously processed ticker & it's 4 related values
+    Cells(tickerrowout, 9).Value = saveticker
+    Cells(tickerrowout, 10).Value = yearchange
+    ' If Yearly Change is positive, color the cell green
+    ' If Yearly Change is negative, color the cell red
+    ' Colors: 4 = green; 3 = red
+    If yearchange > 0 Then
+        Cells(tickerrowout, 10).Interior.ColorIndex = 4
+    ElseIf yearchange < 0 Then
+        Cells(tickerrowout, 10).Interior.ColorIndex = 3
+    End If
+    Cells(tickerrowout, 11).Value = (Str(percentchange) + "%")
+    Cells(tickerrowout, 12).Value = totalvol
+    
+    ' Collect values for Greatest % Increase, Greatest % Decrease & Greatest Total Volume from previous record
+    ' for the last ticker processed
+    If percentchange > gpi Then
+        gpi = percentchange
+        gpiticker = saveticker
+    End If
+    If percentchange < gpd Then
+        gpd = percentchange
+        gpdticker = saveticker
+    End If
+    If totalvol > gtv Then
+        gtv = totalvol
+        gtvticker = saveticker
+    End If
+    
+    ' -----------------------------------------------------------------------------------
+    ' Put out the Greatest % Increase, Greatest % Decrease & Greatest Total Volume values
+    ' -----------------------------------------------------------------------------------
+    Range("P2").Value = gpiticker
+    Range("Q2").Value = (Str(gpi) + "%")
+    Range("P3").Value = gpdticker
+    Range("Q3").Value = (Str(gpd) + "%")
+    Range("P4").Value = gtvticker
+    Range("Q4").Value = gtv
+       
+    ' Let 'em know we're all done
+    MsgBox ("Stock Analysis completed!")
+    
+End Sub
+
